@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "expo-swipeable-item": ["../src/index"],
+      "expo-swipeable-item/*": ["../src/*"]
+    }
+  }
+}
