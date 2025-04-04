@@ -1,73 +1,161 @@
-import { useEvent } from 'expo';
-import ExpoSwipeableItem, { ExpoSwipeableItemView } from 'expo-swipeable-item';
-import { Button, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useRef } from "react";
+import { DraggableView, DraggableViewRef } from "expo-swipeable-item";
+import {
+  SafeAreaView,
+  FlatList,
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+interface ListItem {
+  id: string;
+  text: string;
+}
 
 export default function App() {
-  const onChangePayload = useEvent(ExpoSwipeableItem, 'onChange');
+  const data: ListItem[] = Array.from({ length: 10 }, (_, index) => ({
+    id: `item-${index}`,
+    text: `Item ${index + 1}`,
+  }));
+
+  const buttonWidth = 72.5;
+  const itemRefs = useRef<Record<string, DraggableViewRef | null>>({});
+
+  const handleButtonPress = useCallback(
+    (item: ListItem, side: "left" | "right") => {
+      const ref = itemRefs.current[item.id];
+      if (ref) {
+        ref.closeDraggable();
+        console.log(`${side} button pressed for`, item.text);
+      }
+    },
+    []
+  );
+
+  const renderItem = ({ item }: { item: ListItem }) => {
+    return (
+      <View style={styles.item}>
+        <DraggableView
+          ref={(ref) => (itemRefs.current[item.id] = ref)}
+          enabled
+          buttonWidth={buttonWidth}
+          leftButtons={[
+            <TouchableOpacity
+              style={[styles.smallButton, { width: buttonWidth }]}
+              onPress={() => handleButtonPress(item, "left")}
+            >
+              <Text>Left</Text>
+            </TouchableOpacity>,
+            <TouchableOpacity
+              style={[styles.smallButton, { width: buttonWidth }]}
+              onPress={() => handleButtonPress(item, "left")}
+            >
+              <Text>Left</Text>
+            </TouchableOpacity>,
+          ]}
+          rightButtons={[
+            <TouchableOpacity
+              style={[styles.smallButton, { width: buttonWidth }]}
+              onPress={() => handleButtonPress(item, "right")}
+            >
+              <Text>Right</Text>
+            </TouchableOpacity>,
+            <TouchableOpacity
+              style={[styles.smallButton, { width: buttonWidth }]}
+              onPress={() => handleButtonPress(item, "right")}
+            >
+              <Text>Right</Text>
+            </TouchableOpacity>,
+          ]}
+        >
+          <View style={styles.itemContent}>
+            <Text style={styles.itemText}>{item.text}</Text>
+          </View>
+        </DraggableView>
+      </View>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.container}>
-        <Text style={styles.header}>Module API Example</Text>
-        <Group name="Constants">
-          <Text>{ExpoSwipeableItem.PI}</Text>
-        </Group>
-        <Group name="Functions">
-          <Text>{ExpoSwipeableItem.hello()}</Text>
-        </Group>
-        <Group name="Async functions">
-          <Button
-            title="Set value"
-            onPress={async () => {
-              await ExpoSwipeableItem.setValueAsync('Hello from JS!');
+    <GestureHandlerRootView>
+      <SafeAreaView style={styles.container}>
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          contentContainerStyle={styles.contentContainer}
+          keyExtractor={(item) => item.id}
+        />
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              Object.values(itemRefs.current).forEach((ref) => {
+                ref?.closeDraggable();
+              });
             }}
-          />
-        </Group>
-        <Group name="Events">
-          <Text>{onChangePayload?.value}</Text>
-        </Group>
-        <Group name="Views">
-          <ExpoSwipeableItemView
-            url="https://www.example.com"
-            onLoad={({ nativeEvent: { url } }) => console.log(`Loaded: ${url}`)}
-            style={styles.view}
-          />
-        </Group>
-      </ScrollView>
-    </SafeAreaView>
+          >
+            <Text>Close all</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              itemRefs.current[data[0].id]?.closeDraggable();
+            }}
+          >
+            <Text>Close first</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
-function Group(props: { name: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.group}>
-      <Text style={styles.groupHeader}>{props.name}</Text>
-      {props.children}
-    </View>
-  );
-}
-
-const styles = {
-  header: {
-    fontSize: 30,
-    margin: 20,
-  },
-  groupHeader: {
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  group: {
-    margin: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-  },
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
-  view: {
-    flex: 1,
-    height: 200,
+  item: {
+    width: "100%",
+    height: 55,
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
-};
+  contentContainer: {
+    paddingBottom: 100,
+    gap: 5,
+  },
+  itemText: {
+    fontSize: 16,
+  },
+  itemContent: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  button: {
+    width: "80%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "blue",
+  },
+  smallButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "red",
+    height: "100%",
+  },
+  buttonContainer: {
+    gap: 10,
+  },
+});
