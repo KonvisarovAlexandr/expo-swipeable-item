@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { DraggableView, DraggableViewRef } from "expo-swipeable-item";
 import {
   SafeAreaView,
@@ -24,14 +24,40 @@ export default function App() {
   const buttonWidth = 72.5;
   const itemRefs = useRef<Record<string, DraggableViewRef | null>>({});
 
-  const handleButtonPress = useCallback(
-    (item: ListItem, side: "left" | "right") => {
-      const ref = itemRefs.current[item.id];
-      if (ref) {
-        ref.closeDraggable();
-        console.log(`${side} button pressed for`, item.text);
-      }
-    },
+  const leftButtons = useMemo(
+    () => [
+      <TouchableOpacity
+        style={[styles.smallButton, styles.blue, { width: buttonWidth }]}
+      >
+        <Text>Left</Text>
+      </TouchableOpacity>,
+      <TouchableOpacity
+        style={[styles.smallButton, styles.yellow, { width: buttonWidth }]}
+      >
+        <Text>Left</Text>
+      </TouchableOpacity>,
+      <TouchableOpacity
+        style={[styles.smallButton, styles.green, { width: buttonWidth }]}
+      >
+        <Text>Left</Text>
+      </TouchableOpacity>,
+    ],
+    []
+  );
+
+  const rightButtons = useMemo(
+    () => [
+      <TouchableOpacity
+        style={[styles.smallButton, styles.yellow, { width: buttonWidth }]}
+      >
+        <Text>Right</Text>
+      </TouchableOpacity>,
+      <TouchableOpacity
+        style={[styles.smallButton, styles.red, { width: buttonWidth }]}
+      >
+        <Text>Right</Text>
+      </TouchableOpacity>,
+    ],
     []
   );
 
@@ -41,35 +67,10 @@ export default function App() {
         <DraggableView
           ref={(ref) => (itemRefs.current[item.id] = ref)}
           enabled
+          swipeSides="both"
           buttonWidth={buttonWidth}
-          leftButtons={[
-            <TouchableOpacity
-              style={[styles.smallButton, { width: buttonWidth }]}
-              onPress={() => handleButtonPress(item, "left")}
-            >
-              <Text>Left</Text>
-            </TouchableOpacity>,
-            <TouchableOpacity
-              style={[styles.smallButton, { width: buttonWidth }]}
-              onPress={() => handleButtonPress(item, "left")}
-            >
-              <Text>Left</Text>
-            </TouchableOpacity>,
-          ]}
-          rightButtons={[
-            <TouchableOpacity
-              style={[styles.smallButton, { width: buttonWidth }]}
-              onPress={() => handleButtonPress(item, "right")}
-            >
-              <Text>Right</Text>
-            </TouchableOpacity>,
-            <TouchableOpacity
-              style={[styles.smallButton, { width: buttonWidth }]}
-              onPress={() => handleButtonPress(item, "right")}
-            >
-              <Text>Right</Text>
-            </TouchableOpacity>,
-          ]}
+          leftButtons={leftButtons}
+          rightButtons={rightButtons}
         >
           <View style={styles.itemContent}>
             <Text style={styles.itemText}>{item.text}</Text>
@@ -154,6 +155,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "red",
     height: "100%",
+  },
+  red: {
+    backgroundColor: "red",
+  },
+  blue: {
+    backgroundColor: "blue",
+  },
+  green: {
+    backgroundColor: "green",
+  },
+  yellow: {
+    backgroundColor: "yellow",
   },
   buttonContainer: {
     gap: 10,
