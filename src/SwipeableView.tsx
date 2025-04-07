@@ -13,7 +13,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
-type CustomViewProps = {
+type SwipeableViewProps = {
   children: React.ReactNode;
   leftButtons?: React.ReactNode[];
   rightButtons?: React.ReactNode[];
@@ -25,16 +25,16 @@ type CustomViewProps = {
   buttonWidth?: number;
 };
 
-export type DraggableViewRef = {
-  closeDraggable: () => void;
+export type SwipeableViewRef = {
+  closeSwipeable: () => void;
 };
 
 type ContextType = {
   x: number;
 };
 
-export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
-  function DraggableView(
+export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
+  function SwipeableView(
     {
       children,
       style,
@@ -117,13 +117,13 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
       };
     }, [x]);
 
-    const closeDraggable = useCallback(() => {
+    const closeSwipeable = useCallback(() => {
       x.value = withTiming(0);
       context.value = { x: 0 };
     }, [x, context]);
 
     useImperativeHandle(ref, () => ({
-      closeDraggable,
+      closeSwipeable,
     }));
 
     const GetLeftButtonStyle = (index: number) => {

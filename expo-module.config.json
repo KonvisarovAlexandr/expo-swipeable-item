@@ -1,17 +1,3 @@
 {
-  "platforms": [
-    "apple",
-    "android",
-    "web"
-  ],
-  "apple": {
-    "modules": [
-      "ExpoSwipeableItemModule"
-    ]
-  },
-  "android": {
-    "modules": [
-      "expo.modules.swipeableitem.ExpoSwipeableItemModule"
-    ]
-  }
+  "platforms": ["apple", "android"]
 }

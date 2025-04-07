@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef } from "react";
-import { DraggableView, DraggableViewRef } from "expo-swipeable-item";
+import { SwipeableView, SwipeableViewRef } from "expo-swipeable-item";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   SafeAreaView,
@@ -27,16 +27,16 @@ export default function App() {
   );
 
   const buttonWidth = 72.5;
-  const itemRefs = useRef<Record<string, DraggableViewRef | null>>({});
+  const itemRefs = useRef<Record<string, SwipeableViewRef | null>>({});
 
   const closeAllItems = useCallback(() => {
     Object.values(itemRefs.current).forEach((ref) => {
-      ref?.closeDraggable();
+      ref?.closeSwipeable();
     });
   }, []);
 
   const closeFirstItem = useCallback(() => {
-    itemRefs.current[data[0].id]?.closeDraggable();
+    itemRefs.current[data[0].id]?.closeSwipeable();
   }, [data]);
 
   const leftButtons = useMemo(
@@ -50,7 +50,7 @@ export default function App() {
         <Text style={styles.buttonText}>Pin</Text>
       </TouchableOpacity>,
     ],
-    [buttonWidth]
+    []
   );
 
   const rightButtons = useMemo(
@@ -67,13 +67,13 @@ export default function App() {
         <Text style={styles.buttonText}>Delete</Text>
       </TouchableOpacity>,
     ],
-    [buttonWidth]
+    []
   );
 
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => (
       <View style={styles.item}>
-        <DraggableView
+        <SwipeableView
           ref={(ref) => (itemRefs.current[item.id] = ref)}
           enabled
           swipeSides="both"
@@ -84,7 +84,7 @@ export default function App() {
           <View style={styles.itemContent}>
             <Text style={styles.itemText}>{item.text}</Text>
           </View>
-        </DraggableView>
+        </SwipeableView>
       </View>
     ),
     [leftButtons, rightButtons, buttonWidth]
