@@ -74,7 +74,6 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
         const { translationX } = event;
         const currentX = context.value.x;
         const clampValue = (value: number, min: number, max: number) => {
-          console.log({ value, min, max });
           return Math.max(min, Math.min(max, value));
         };
 
@@ -98,13 +97,9 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
               clampValue(translationX, -maxOffsetRight, maxOffsetLeft) +
               currentX;
           } else if (currentX === maxOffsetLeft) {
-            x.value =
-              clampValue(translationX, -maxOffsetLeft, maxOffsetLeft) +
-              currentX;
+            x.value = clampValue(translationX, -maxOffsetLeft, 0) + currentX;
           } else if (currentX === -maxOffsetRight) {
-            x.value =
-              clampValue(translationX, -maxOffsetRight, maxOffsetRight) +
-              currentX;
+            x.value = clampValue(translationX, 0, maxOffsetRight) + currentX;
           }
         }
       })
@@ -134,7 +129,6 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
     const GetLeftButtonStyle = (index: number) => {
       return useAnimatedStyle(() => {
         const multiplier = (index + 1) / (leftButtons?.length || 1);
-
         const translateX = interpolate(
           x.value,
           [0, maxOffsetLeft],
@@ -144,6 +138,7 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
 
         return {
           transform: [{ translateX }],
+          zIndex: -index,
         };
       }, [x]);
     };
@@ -152,7 +147,6 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
       return useAnimatedStyle(() => {
         const reversedIndex = (rightButtons?.length || 1) - 1 - index;
         const multiplier = (reversedIndex + 1) / (rightButtons?.length || 1);
-
         const translateX = interpolate(
           x.value,
           [-maxOffsetRight, 0],
@@ -162,6 +156,7 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
 
         return {
           transform: [{ translateX }],
+          zIndex: index,
         };
       }, [x]);
     };
@@ -182,7 +177,7 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
           {leftButtons?.map((button, index) => (
             <Animated.View
               key={index}
-              style={[GetLeftButtonStyle(index), { zIndex: -index }]}
+              style={[GetLeftButtonStyle(index), { width: buttonWidth }]}
             >
               {button}
             </Animated.View>
@@ -202,7 +197,7 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
           {rightButtons?.map((button, index) => (
             <Animated.View
               key={index}
-              style={[GetRightButtonStyle(index), { zIndex: index }]}
+              style={[GetRightButtonStyle(index), { width: buttonWidth }]}
             >
               {button}
             </Animated.View>

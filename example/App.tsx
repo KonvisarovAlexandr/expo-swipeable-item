@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { DraggableView, DraggableViewRef } from "expo-swipeable-item";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   SafeAreaView,
   FlatList,
@@ -16,53 +17,61 @@ interface ListItem {
 }
 
 export default function App() {
-  const data: ListItem[] = Array.from({ length: 10 }, (_, index) => ({
-    id: `item-${index}`,
-    text: `Item ${index + 1}`,
-  }));
+  const data: ListItem[] = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, index) => ({
+        id: `item-${index}`,
+        text: `Item ${index + 1}`,
+      })),
+    []
+  );
 
   const buttonWidth = 72.5;
   const itemRefs = useRef<Record<string, DraggableViewRef | null>>({});
 
+  const closeAllItems = useCallback(() => {
+    Object.values(itemRefs.current).forEach((ref) => {
+      ref?.closeDraggable();
+    });
+  }, []);
+
+  const closeFirstItem = useCallback(() => {
+    itemRefs.current[data[0].id]?.closeDraggable();
+  }, [data]);
+
   const leftButtons = useMemo(
     () => [
-      <TouchableOpacity
-        style={[styles.smallButton, styles.blue, { width: buttonWidth }]}
-      >
-        <Text>Left</Text>
+      <TouchableOpacity key="left-1" style={[styles.smallButton, styles.red]}>
+        <Ionicons name="heart" size={24} color="white" />
+        <Text style={styles.buttonText}>Favourite</Text>
       </TouchableOpacity>,
-      <TouchableOpacity
-        style={[styles.smallButton, styles.yellow, { width: buttonWidth }]}
-      >
-        <Text>Left</Text>
-      </TouchableOpacity>,
-      <TouchableOpacity
-        style={[styles.smallButton, styles.green, { width: buttonWidth }]}
-      >
-        <Text>Left</Text>
+      <TouchableOpacity key="left-2" style={[styles.smallButton, styles.green]}>
+        <Ionicons name="pin" size={24} color="white" />
+        <Text style={styles.buttonText}>Pin</Text>
       </TouchableOpacity>,
     ],
-    []
+    [buttonWidth]
   );
 
   const rightButtons = useMemo(
     () => [
       <TouchableOpacity
-        style={[styles.smallButton, styles.yellow, { width: buttonWidth }]}
+        key="right-1"
+        style={[styles.smallButton, styles.lightBrown]}
       >
-        <Text>Right</Text>
+        <Ionicons name="volume-mute" size={24} color="white" />
+        <Text style={styles.buttonText}>Mute</Text>
       </TouchableOpacity>,
-      <TouchableOpacity
-        style={[styles.smallButton, styles.red, { width: buttonWidth }]}
-      >
-        <Text>Right</Text>
+      <TouchableOpacity key="right-2" style={[styles.smallButton, styles.red]}>
+        <Ionicons name="trash" size={24} color="white" />
+        <Text style={styles.buttonText}>Delete</Text>
       </TouchableOpacity>,
     ],
-    []
+    [buttonWidth]
   );
 
-  const renderItem = ({ item }: { item: ListItem }) => {
-    return (
+  const renderItem = useCallback(
+    ({ item }: { item: ListItem }) => (
       <View style={styles.item}>
         <DraggableView
           ref={(ref) => (itemRefs.current[item.id] = ref)}
@@ -77,11 +86,12 @@ export default function App() {
           </View>
         </DraggableView>
       </View>
-    );
-  };
+    ),
+    [leftButtons, rightButtons, buttonWidth]
+  );
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={styles.rootView}>
       <SafeAreaView style={styles.container}>
         <FlatList
           data={data}
@@ -90,22 +100,10 @@ export default function App() {
           keyExtractor={(item) => item.id}
         />
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              Object.values(itemRefs.current).forEach((ref) => {
-                ref?.closeDraggable();
-              });
-            }}
-          >
+          <TouchableOpacity style={styles.button} onPress={closeAllItems}>
             <Text>Close all</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              itemRefs.current[data[0].id]?.closeDraggable();
-            }}
-          >
+          <TouchableOpacity style={styles.button} onPress={closeFirstItem}>
             <Text>Close first</Text>
           </TouchableOpacity>
         </View>
@@ -115,6 +113,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  rootView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: "#eee",
@@ -155,6 +156,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "red",
     height: "100%",
+    gap: 4,
   },
   red: {
     backgroundColor: "red",
@@ -165,10 +167,18 @@ const styles = StyleSheet.create({
   green: {
     backgroundColor: "green",
   },
+  lightBrown: {
+    backgroundColor: "#D2B48C", // light brown color using hex code
+  },
   yellow: {
     backgroundColor: "yellow",
   },
   buttonContainer: {
     gap: 10,
+  },
+  buttonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "white",
   },
 });
