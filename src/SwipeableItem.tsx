@@ -10,6 +10,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  interpolate,
 } from "react-native-reanimated";
 
 type CustomViewProps = {
@@ -73,26 +74,38 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
         const { translationX } = event;
         const currentX = context.value.x;
         const clampValue = (value: number, min: number, max: number) => {
+          console.log({ value, min, max });
           return Math.max(min, Math.min(max, value));
         };
 
         if (swipeSides === "left") {
-          const maxOffset = maxOffsetLeft;
+          const maxOffset = maxOffsetRight;
           if (currentX === 0) {
             x.value = clampValue(translationX, -maxOffset, 0) + currentX;
           } else if (currentX === -maxOffset) {
             x.value = clampValue(translationX, 0, maxOffset) + currentX;
           }
         } else if (swipeSides === "right") {
-          const maxOffset = maxOffsetRight;
+          const maxOffset = maxOffsetLeft;
           if (currentX === 0) {
             x.value = clampValue(translationX, 0, maxOffset) + currentX;
           } else if (currentX === maxOffset) {
             x.value = clampValue(translationX, -maxOffset, 0) + currentX;
           }
         } else {
-          x.value =
-            clampValue(translationX, -maxOffsetRight, maxOffsetLeft) + currentX;
+          if (currentX === 0) {
+            x.value =
+              clampValue(translationX, -maxOffsetRight, maxOffsetLeft) +
+              currentX;
+          } else if (currentX === maxOffsetLeft) {
+            x.value =
+              clampValue(translationX, -maxOffsetLeft, maxOffsetLeft) +
+              currentX;
+          } else if (currentX === -maxOffsetRight) {
+            x.value =
+              clampValue(translationX, -maxOffsetRight, maxOffsetRight) +
+              currentX;
+          }
         }
       })
       .onEnd(() => {
@@ -118,6 +131,41 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
       closeDraggable,
     }));
 
+    const GetLeftButtonStyle = (index: number) => {
+      return useAnimatedStyle(() => {
+        const multiplier = (index + 1) / (leftButtons?.length || 1);
+
+        const translateX = interpolate(
+          x.value,
+          [0, maxOffsetLeft],
+          [-buttonWidth * multiplier * (leftButtons?.length || 1), 0],
+          { extrapolateRight: "clamp" }
+        );
+
+        return {
+          transform: [{ translateX }],
+        };
+      }, [x]);
+    };
+
+    const GetRightButtonStyle = (index: number) => {
+      return useAnimatedStyle(() => {
+        const reversedIndex = (rightButtons?.length || 1) - 1 - index;
+        const multiplier = (reversedIndex + 1) / (rightButtons?.length || 1);
+
+        const translateX = interpolate(
+          x.value,
+          [-maxOffsetRight, 0],
+          [0, buttonWidth * multiplier * (rightButtons?.length || 1)],
+          { extrapolateLeft: "clamp" }
+        );
+
+        return {
+          transform: [{ translateX }],
+        };
+      }, [x]);
+    };
+
     return (
       <GestureHandlerRootView>
         <View
@@ -131,7 +179,14 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
             flexDirection: "row",
           }}
         >
-          {leftButtons}
+          {leftButtons?.map((button, index) => (
+            <Animated.View
+              key={index}
+              style={[GetLeftButtonStyle(index), { zIndex: -index }]}
+            >
+              {button}
+            </Animated.View>
+          ))}
         </View>
         <View
           style={{
@@ -144,7 +199,14 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
             flexDirection: "row",
           }}
         >
-          {rightButtons}
+          {rightButtons?.map((button, index) => (
+            <Animated.View
+              key={index}
+              style={[GetRightButtonStyle(index), { zIndex: index }]}
+            >
+              {button}
+            </Animated.View>
+          ))}
         </View>
         <GestureDetector gesture={panGesture}>
           <Animated.View
@@ -153,6 +215,7 @@ export const DraggableView = forwardRef<DraggableViewRef, CustomViewProps>(
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
+                zIndex: 100,
               },
               panStyle,
               { ...style },
