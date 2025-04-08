@@ -48,6 +48,9 @@ npx expo install react-native-gesture-handler
 
 ### Example
 
+![Screen Recording 2025-04-07 at 13 14 00](https://github.com/user-attachments/assets/dfda6601-18fa-4b75-92b7-ebfd4c731d1c)
+
+
 ```tsx
   import { SwipeableView, SwipeableViewRef } from "expo-swipeable-item";
 
