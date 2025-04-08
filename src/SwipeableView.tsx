@@ -1,4 +1,9 @@
-import React, { useCallback, useImperativeHandle, forwardRef } from "react";
+import React, {
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+  useMemo,
+} from "react";
 import { View, ViewStyle } from "react-native";
 import {
   GestureDetector,
@@ -21,8 +26,10 @@ type SwipeableViewProps = {
   enabled?: boolean;
   onSnap?: () => void;
   onPress?: () => void;
-  swipeSides?: "left" | "right" | "both";
   buttonWidth?: number;
+  additionalOffsetToDrag?: number;
+  onSwipeLeftTillEnd?: () => void;
+  onSwipeRightTillEnd?: () => void;
 };
 
 export type SwipeableViewRef = {
@@ -41,10 +48,12 @@ export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
       onSnap = () => {},
       onPress = () => {},
       enabled = false,
-      swipeSides = "both",
       buttonWidth = 72.5,
       leftButtons,
       rightButtons,
+      additionalOffsetToDrag = 0,
+      onSwipeLeftTillEnd = () => {},
+      onSwipeRightTillEnd = () => {},
     },
     ref
   ) {
@@ -55,6 +64,17 @@ export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
       x: 0,
     });
     const touchStartTime = useSharedValue(0);
+
+    const swipeSides = useMemo(() => {
+      if (leftButtons?.length && rightButtons?.length) {
+        return "both";
+      } else if (leftButtons?.length) {
+        return "right";
+      } else if (rightButtons?.length) {
+        return "left";
+      }
+      return "none";
+    }, [leftButtons, rightButtons]);
 
     const panGesture = Gesture.Pan()
       .enabled(enabled)
@@ -76,7 +96,6 @@ export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
         const clampValue = (value: number, min: number, max: number) => {
           return Math.max(min, Math.min(max, value));
         };
-
         if (swipeSides === "left") {
           const maxOffset = maxOffsetRight;
           if (currentX === 0) {
@@ -94,19 +113,41 @@ export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
         } else {
           if (currentX === 0) {
             x.value =
-              clampValue(translationX, -maxOffsetRight, maxOffsetLeft) +
-              currentX;
+              clampValue(
+                translationX,
+                -maxOffsetRight - additionalOffsetToDrag,
+                maxOffsetLeft + additionalOffsetToDrag
+              ) + currentX;
           } else if (currentX === maxOffsetLeft) {
-            x.value = clampValue(translationX, -maxOffsetLeft, 0) + currentX;
+            x.value =
+              clampValue(translationX, -maxOffsetLeft, additionalOffsetToDrag) +
+              currentX;
           } else if (currentX === -maxOffsetRight) {
-            x.value = clampValue(translationX, 0, maxOffsetRight) + currentX;
+            x.value =
+              clampValue(
+                translationX,
+                -additionalOffsetToDrag,
+                maxOffsetRight
+              ) + currentX;
           }
         }
       })
       .onEnd(() => {
         const value = x.value;
-        const toValue =
-          value > 50 ? maxOffsetLeft : value < -50 ? -maxOffsetRight : 0;
+        let toValue = 0;
+        if (context.value.x === 0) {
+          toValue =
+            value > 20 ? maxOffsetLeft : value < -20 ? -maxOffsetRight : 0;
+        } else if (context.value.x === maxOffsetLeft) {
+          toValue = value < maxOffsetLeft - 20 ? 0 : maxOffsetLeft;
+        } else if (context.value.x === -maxOffsetRight) {
+          toValue = value > -maxOffsetRight + 20 ? 0 : -maxOffsetRight;
+        }
+        if (value > maxOffsetLeft + additionalOffsetToDrag / 2) {
+          runOnJS(onSwipeLeftTillEnd)();
+        } else if (value < -maxOffsetRight - additionalOffsetToDrag / 2) {
+          runOnJS(onSwipeRightTillEnd)();
+        }
         x.value = withTiming(toValue);
         context.value.x = toValue;
       });
@@ -135,7 +176,6 @@ export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
           [-buttonWidth * multiplier * (leftButtons?.length || 1), 0],
           { extrapolateRight: "clamp" }
         );
-
         return {
           transform: [{ translateX }],
           zIndex: -index,
@@ -213,7 +253,7 @@ export const SwipeableView = forwardRef<SwipeableViewRef, SwipeableViewProps>(
                 zIndex: 100,
               },
               panStyle,
-              { ...style },
+              style,
             ]}
           >
             {children}

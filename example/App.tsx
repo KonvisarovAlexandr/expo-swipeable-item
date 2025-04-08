@@ -39,36 +39,33 @@ export default function App() {
     itemRefs.current[data[0].id]?.closeSwipeable();
   }, [data]);
 
-  const leftButtons = useMemo(
-    () => [
-      <TouchableOpacity key="left-1" style={[styles.smallButton, styles.red]}>
-        <Ionicons name="heart" size={24} color="white" />
-        <Text style={styles.buttonText}>Favourite</Text>
-      </TouchableOpacity>,
-      <TouchableOpacity key="left-2" style={[styles.smallButton, styles.green]}>
-        <Ionicons name="pin" size={24} color="white" />
-        <Text style={styles.buttonText}>Pin</Text>
-      </TouchableOpacity>,
-    ],
-    []
-  );
+  const leftButtons = [
+    <TouchableOpacity key="left-1" style={[styles.smallButton, styles.red]}>
+      <Ionicons name="heart" size={24} color="white" />
+      <Text style={styles.buttonText}>Favourite</Text>
+    </TouchableOpacity>,
+    <TouchableOpacity key="left-2" style={[styles.smallButton, styles.green]}>
+      <Ionicons name="pin" size={24} color="white" />
+      <Text style={styles.buttonText}>Pin</Text>
+    </TouchableOpacity>,
+  ];
 
-  const rightButtons = useMemo(
-    () => [
-      <TouchableOpacity
-        key="right-1"
-        style={[styles.smallButton, styles.lightBrown]}
-      >
-        <Ionicons name="volume-mute" size={24} color="white" />
-        <Text style={styles.buttonText}>Mute</Text>
-      </TouchableOpacity>,
-      <TouchableOpacity key="right-2" style={[styles.smallButton, styles.red]}>
-        <Ionicons name="trash" size={24} color="white" />
-        <Text style={styles.buttonText}>Delete</Text>
-      </TouchableOpacity>,
-    ],
-    []
-  );
+  const rightButtons = [
+    <TouchableOpacity
+      key="right-1"
+      style={[styles.smallButton, styles.lightBrown]}
+    >
+      <Ionicons name="volume-mute" size={24} color="white" />
+      <Text style={styles.buttonText}>Mute</Text>
+    </TouchableOpacity>,
+    <TouchableOpacity
+      key="right-2"
+      style={[styles.smallButton, styles.lightBrown]}
+    >
+      <Ionicons name="trash" size={24} color="white" />
+      <Text style={styles.buttonText}>Delete</Text>
+    </TouchableOpacity>,
+  ];
 
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => (
@@ -76,7 +73,6 @@ export default function App() {
         <SwipeableView
           ref={(ref) => (itemRefs.current[item.id] = ref)}
           enabled
-          swipeSides="both"
           buttonWidth={buttonWidth}
           leftButtons={leftButtons}
           rightButtons={rightButtons}
